@@ -1,25 +1,25 @@
-# webview  webpage 互相传值
-*http://localhost:8080/login.jsp*
+# test
+## Electron与RequireJS冲突的解决办法
+Electron在运行环境中引入了Node.js，所以在DOM中有一些额外的变量，比如module、exports和 require。这导致了许多库不能正常运行,因为它们也需要将同名的变量加入运行环境中。
+在引入RequireJS库之前，重命名变量（注意：Node.js的require会首先加载，需要在引入冲突的库之前重命名才有效）
 
-写以下js
-
-****
-
-    <a onclick="hmptestSend(11)">test</a>
-    <script>
-    //                    function hmptestSend(num){
-    //                        alert('Number is send from the webview:'+num);
-    //                        console.log(num);
-    //                    }
-        function hmptestSend(num){
-            alert('{"method": "add","param": 1}');
-            console.log('{"method": "add","param": 1}');
-        }
-        function hmptestReceive(num){
-            alert('Number is received from the webview:'+num);
-        }
+    <script type="text/javascript">
+        window.nodeRequire = require;
+        delete window.require;
+        delete window.exports;
+        delete window.module;
     </script>
+    <script type="text/javascript" th:src="${domainCss} + '/js/gallery/require-jquery.js'"></script>
+    <script type="text/javascript" th:src="${domainCss} + '/js/gallery/require-config.js'+${staticTimeStamp}"></script>
 
+使用重命名后的require来继续使用Node.js和Electron提供的API
+nodeRequire("electron").ipcRenderer.send("quit");
 
-webpage 将 11打印到控制台，webview监听到控制台的11   
-将11 + 20  ，返回给webpage
+禁用Node.js
+
+    // 在主进程中
+    mainWindow = new BrowserWindow({
+      webPreferences: {
+        nodeIntegration: false
+      }
+    });
